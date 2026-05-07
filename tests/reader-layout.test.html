@@ -104,6 +104,19 @@
                 assertEqual(ReaderLayout.getProgressPercent(30), 96);
             });
 
+            test('splits measured lines into fixed-size pages', () => {
+                const pages = ReaderLayout.paginateLines(['a', 'b', 'c', 'd', 'e'], 2);
+
+                assertEqual(pages.length, 3);
+                assertEqual(pages[0].join(''), 'ab');
+                assertEqual(pages[2].join(''), 'e');
+            });
+
+            test('formats page progress from current page and total pages', () => {
+                assertEqual(ReaderLayout.getPageProgressPercent(0, 4), 25);
+                assertEqual(ReaderLayout.getPageProgressPercent(3, 4), 100);
+            });
+
             test('formats layout stats consistently', () => {
                 assertEqual(ReaderLayout.formatLayoutStats(3, 95.6), '3 lines / 96px');
             });

@@ -14,14 +14,12 @@
         :root {
             color-scheme: light;
 
-            /* Shared colors keep the Kindle shell and e-ink screen consistent. */
+            /* Shared colors keep the browser frame and e-ink reading surface consistent. */
             --ink: #20201d;
             --soft-ink: #55534c;
             --paper: #e8e5d8;
             --paper-dark: #d5d0bf;
-            --bezel: #252522;
-            --bezel-edge: #11110f;
-            --shadow: rgba(16, 16, 14, 0.34);
+            --shadow: rgba(51, 49, 42, 0.16);
 
             /* JavaScript updates --reader-size when the user presses the Aa controls. */
             --reader-size: 20px;
@@ -32,60 +30,57 @@
             min-height: 100vh;
             display: grid;
             place-items: center;
-            /* The cool desk background helps the warm e-ink panel read as a physical object. */
+            /* The whole browser page is now the e-ink surface, with no surrounding frame. */
             background:
-                radial-gradient(circle at top left, rgba(255, 255, 255, 0.72), transparent 34rem),
-                linear-gradient(135deg, #a9b0aa 0%, #6f7673 48%, #454a48 100%);
+                linear-gradient(rgba(32, 32, 29, 0.035) 1px, transparent 1px),
+                radial-gradient(circle at 22% 18%, rgba(255, 255, 255, 0.5), transparent 18rem),
+                linear-gradient(180deg, #f2efe2 0%, var(--paper) 55%, var(--paper-dark) 100%);
+            background-size: 100% 4px, auto, auto;
             font-family: Georgia, "Times New Roman", serif;
             color: var(--ink);
             overflow: hidden;
         }
 
         .kindle {
-            /* The outer frame is intentionally thick, matching the older Kindle silhouette. */
-            width: min(92vw, 650px);
-            aspect-ratio: 0.72;
-            padding: clamp(18px, 3vw, 32px);
-            border-radius: 34px;
-            background:
-                linear-gradient(145deg, rgba(255, 255, 255, 0.08), transparent 22%),
-                linear-gradient(315deg, var(--bezel-edge), var(--bezel));
-            box-shadow:
-                0 36px 70px var(--shadow),
-                inset 0 1px 0 rgba(255, 255, 255, 0.16),
-                inset 0 -3px 12px rgba(0, 0, 0, 0.55);
-            position: relative;
-        }
-
-        .kindle::after {
-            /* This small highlight suggests the physical bottom lip of the device. */
-            content: "";
-            position: absolute;
-            left: 50%;
-            bottom: 12px;
-            width: 58px;
-            height: 4px;
-            transform: translateX(-50%);
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.18);
-            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+            /* The wrapper now fills the viewport so the product is the screen itself. */
+            width: 100vw;
+            height: 100vh;
         }
 
         .screen {
             height: 100%;
             display: grid;
             grid-template-rows: auto 1fr auto;
-            border-radius: 9px;
-            /* Subtle horizontal grain keeps the screen e-ink-like without hurting legibility. */
-            background:
-                linear-gradient(rgba(32, 32, 29, 0.035) 1px, transparent 1px),
-                radial-gradient(circle at 22% 18%, rgba(255, 255, 255, 0.5), transparent 18rem),
-                linear-gradient(180deg, #f2efe2 0%, var(--paper) 55%, var(--paper-dark) 100%);
-            background-size: 100% 4px, auto, auto;
-            box-shadow:
-                inset 0 0 0 1px rgba(0, 0, 0, 0.32),
-                inset 0 0 34px rgba(36, 34, 29, 0.16);
+            /* No card, border, or shadow: this element is just the page layout grid. */
+            background: transparent;
             overflow: hidden;
+            position: relative;
+        }
+
+        .screen::after {
+            /* The click ripple is a temporary water-like surface highlight over the e-ink page. */
+            content: "";
+            position: absolute;
+            left: var(--ripple-x, 50%);
+            top: var(--ripple-y, 50%);
+            width: 96px;
+            height: 96px;
+            border: 1px solid rgba(255, 255, 255, 0.36);
+            border-radius: 999px;
+            opacity: 0;
+            pointer-events: none;
+            transform: translate(-50%, -50%) scale(0.22);
+            box-shadow:
+                0 0 0 5px rgba(255, 255, 255, 0.12),
+                0 0 0 11px rgba(32, 32, 29, 0.04),
+                0 0 22px rgba(255, 255, 255, 0.28),
+                inset 0 0 16px rgba(255, 255, 255, 0.2),
+                inset 0 0 28px rgba(32, 32, 29, 0.08);
+            mix-blend-mode: overlay;
+        }
+
+        .screen-rippling::after {
+            animation: surfaceRipple 820ms ease-out both;
         }
 
         .status-bar,
@@ -100,7 +95,7 @@
         }
 
         .status-bar {
-            padding: 16px 22px 8px;
+            padding: 18px clamp(22px, 5vw, 72px) 10px;
             border-bottom: 1px solid rgba(69, 67, 59, 0.2);
         }
 
@@ -119,6 +114,13 @@
             background: rgba(232, 229, 216, 0.38);
         }
 
+        .footer-pagination {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .footer-pagination button,
         .type-controls button {
             width: 28px;
             height: 26px;
@@ -130,12 +132,28 @@
             cursor: pointer;
         }
 
+        .footer-pagination button {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 18px;
+        }
+
+        .footer-pagination button {
+            width: 34px;
+            height: 30px;
+            border: 1px solid rgba(85, 83, 76, 0.22);
+            border-radius: 999px;
+            background: rgba(242, 239, 226, 0.58);
+        }
+
+        .footer-pagination button:hover,
+        .footer-pagination button:focus-visible,
         .type-controls button:hover,
         .type-controls button:focus-visible {
             outline: 1px solid rgba(32, 32, 29, 0.34);
             background: rgba(85, 83, 76, 0.12);
         }
 
+        .footer-pagination button:disabled,
         .type-controls button:disabled {
             color: rgba(85, 83, 76, 0.34);
             cursor: default;
@@ -158,38 +176,10 @@
             color: var(--soft-ink);
         }
 
-        .battery {
-            /* The battery is drawn with CSS so the static page needs no image assets. */
-            width: 28px;
-            height: 13px;
-            border: 1px solid var(--soft-ink);
-            border-radius: 2px;
-            position: relative;
-        }
-
-        .battery::before {
-            content: "";
-            position: absolute;
-            right: -4px;
-            top: 3px;
-            width: 3px;
-            height: 5px;
-            background: var(--soft-ink);
-        }
-
-        .battery::after {
-            content: "";
-            position: absolute;
-            left: 2px;
-            top: 2px;
-            width: 19px;
-            height: 7px;
-            background: var(--soft-ink);
-        }
-
         .page {
-            padding: clamp(28px, 5vw, 52px);
+            padding: clamp(24px, 4vw, 44px) clamp(22px, 8vw, 96px) clamp(12px, 2vw, 22px);
             overflow: hidden;
+            min-height: 0;
         }
 
         .eyebrow {
@@ -201,29 +191,88 @@
         }
 
         h1 {
-            max-width: 10ch;
-            font-size: clamp(38px, 8vw, 70px);
-            line-height: 0.94;
+            max-width: 18ch;
+            font-size: clamp(38px, 6vw, 68px);
+            line-height: 0.98;
             font-weight: 700;
             letter-spacing: 0;
         }
 
         .subtitle {
-            max-width: 30ch;
-            margin-top: 20px;
+            max-width: 58ch;
+            margin-top: 14px;
             color: #37352f;
             /* The subtitle scales with the reader text so the page zoom feels unified. */
             font-size: calc(var(--reader-size) + 2px);
             line-height: 1.32;
         }
 
-        .resume-note {
-            max-width: 42ch;
-            margin-top: clamp(28px, 5vw, 48px);
+        .reader-copy {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            column-gap: clamp(32px, 6vw, 84px);
+            height: clamp(320px, 48vh, 520px);
+            max-width: 100%;
+            margin-top: clamp(16px, 3vw, 28px);
+            overflow: hidden;
             color: #2b2a25;
             font-size: var(--reader-size);
             line-height: var(--reader-leading);
-            text-align: justify;
+        }
+
+        .reader-line {
+            position: absolute;
+            left: 0;
+            white-space: pre;
+        }
+
+        .reader-word {
+            display: inline-block;
+            transform: translate3d(0, 0, 0);
+            will-change: transform;
+        }
+
+        .reader-word-text {
+            display: inline-block;
+            will-change: filter, text-shadow;
+        }
+
+        .reader-word-wobble {
+            animation: liquidWordWobble 820ms cubic-bezier(0.16, 1, 0.3, 1) both;
+            animation-delay: var(--wobble-delay, 0ms);
+        }
+
+        .reader-word-text-reflect {
+            animation: liquidWordReflect 840ms ease-out both;
+            animation-delay: var(--wobble-delay, 0ms);
+        }
+
+        .reader-column {
+            position: relative;
+            min-width: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .reader-line-heading {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 0.72em;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--soft-ink);
+        }
+
+        .reader-line-role {
+            font-weight: 700;
+            color: #26241f;
+        }
+
+        .reader-line-contact,
+        .reader-line-meta {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 0.78em;
+            color: var(--soft-ink);
         }
 
         .cursor-line {
@@ -237,20 +286,53 @@
         }
 
         .reading-footer {
-            padding: 10px 22px 18px;
+            display: grid;
+            grid-template-columns: minmax(150px, 0.8fr) minmax(220px, 1.4fr) minmax(150px, 0.8fr);
+            gap: 18px;
+            padding: 10px clamp(22px, 5vw, 72px) 16px;
             border-top: 1px solid rgba(69, 67, 59, 0.18);
         }
 
+        .page-status {
+            display: grid;
+            gap: 3px;
+            min-width: 140px;
+        }
+
+        .page-status strong {
+            color: var(--ink);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .page-status span {
+            color: var(--soft-ink);
+            font-size: 11px;
+        }
+
         .layout-stats {
-            min-width: 128px;
+            min-width: 150px;
+            text-align: right;
         }
 
         .progress {
-            width: 38%;
+            width: 100%;
             height: 3px;
             border-radius: 999px;
             background: rgba(85, 83, 76, 0.28);
             overflow: hidden;
+        }
+
+        .footer-progress {
+            display: grid;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .wheel-hint {
+            color: var(--soft-ink);
+            font-size: 11px;
+            text-align: center;
         }
 
         .progress span {
@@ -267,6 +349,83 @@
             }
         }
 
+        @keyframes surfaceRipple {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.2);
+            }
+
+            18% {
+                opacity: 0.68;
+                box-shadow:
+                    0 0 0 4px rgba(255, 255, 255, 0.22),
+                    0 0 0 10px rgba(32, 32, 29, 0.06),
+                    0 0 20px rgba(255, 255, 255, 0.36),
+                    inset 0 0 18px rgba(255, 255, 255, 0.22),
+                    inset 0 0 28px rgba(32, 32, 29, 0.08);
+            }
+
+            58% {
+                opacity: 0.26;
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(4.8);
+            }
+        }
+
+        @keyframes liquidWordWobble {
+            0% {
+                transform: translate3d(0, 0, 0);
+            }
+
+            24% {
+                transform: translate3d(var(--wobble-x, 0), var(--wobble-y, 0), 0);
+            }
+
+            48% {
+                transform: translate3d(calc(var(--wobble-x, 0) * -0.46), calc(var(--wobble-y, 0) * -0.46), 0);
+            }
+
+            72% {
+                transform: translate3d(calc(var(--wobble-x, 0) * 0.18), calc(var(--wobble-y, 0) * 0.18), 0);
+            }
+
+            100% {
+                transform: translate3d(0, 0, 0);
+            }
+        }
+
+        @keyframes liquidWordReflect {
+            0% {
+                color: inherit;
+                filter: brightness(1) contrast(1);
+                text-shadow: none;
+            }
+
+            22% {
+                color: #11110f;
+                filter: brightness(1.22) contrast(1.24);
+                text-shadow:
+                    0 -1px 0 rgba(255, 255, 255, 0.4),
+                    0 1px 1px rgba(32, 32, 29, 0.18);
+            }
+
+            52% {
+                color: #343128;
+                filter: brightness(0.95) contrast(1.08);
+                text-shadow:
+                    0 1px 0 rgba(255, 255, 255, 0.18);
+            }
+
+            100% {
+                color: inherit;
+                filter: brightness(1) contrast(1);
+                text-shadow: none;
+            }
+        }
+
         @media (max-width: 560px) {
             body {
                 overflow: auto;
@@ -274,17 +433,28 @@
             }
 
             .kindle {
-                width: 94vw;
-                min-height: 82vh;
-                aspect-ratio: auto;
+                width: 100vw;
+                min-height: 100vh;
+                height: auto;
             }
 
-            .resume-note {
-                text-align: left;
+            .reader-copy {
+                display: block;
+                height: 360px;
             }
 
             .status-title,
             .layout-stats {
+                display: none;
+            }
+
+            .reading-footer {
+                grid-template-columns: auto 1fr auto;
+                gap: 10px;
+            }
+
+            .wheel-hint,
+            .page-status span {
                 display: none;
             }
         }
@@ -300,24 +470,30 @@
                     <span class="zoom-value" id="zoomValue">100%</span>
                     <button class="zoom-in" id="zoomIn" type="button" aria-label="Increase text size">A</button>
                 </div>
-                <span class="battery" aria-label="Battery level"></span>
+                <span aria-hidden="true"></span>
             </header>
 
             <article class="page">
                 <p class="eyebrow">Chapter 1 - Candidate Profile</p>
                 <h1>Rafael Gomes Santos</h1>
-                <p class="subtitle">Software builder, interface tinkerer, and careful reader of systems.</p>
-                <p class="resume-note" id="readerText">
-                    This page is being shaped as a calm e-ink resume: quiet contrast, long-form reading rhythm,
-                    and a device frame that feels closer to a Kindle than a web dashboard.
-                    <span class="cursor-line" aria-hidden="true"></span>
-                </p>
+                <p class="subtitle">Tech Lead / Senior Software Engineer | Platform Engineering | Distributed Systems | C#/.NET</p>
+                <div class="reader-copy" id="readerText" aria-label="Measured resume text"></div>
             </article>
 
             <footer class="reading-footer">
-                <span id="locationLabel">Loc 24</span>
-                <div class="progress" aria-hidden="true"><span></span></div>
-                <span class="layout-stats" id="layoutStats">Measuring...</span>
+                <div class="page-status">
+                    <strong id="pageLabel">Page 1</strong>
+                    <span id="locationLabel">Loc 1</span>
+                </div>
+                <div class="footer-progress">
+                    <div class="progress" aria-hidden="true"><span></span></div>
+                    <span class="wheel-hint">Use mouse wheel over the page to zoom</span>
+                </div>
+                <div class="footer-pagination" aria-label="Page controls">
+                    <button id="previousPage" type="button" aria-label="Previous page">&lt;</button>
+                    <span class="layout-stats" id="layoutStats">Measuring...</span>
+                    <button id="nextPage" type="button" aria-label="Next page">&gt;</button>
+                </div>
             </footer>
         </section>
     </main>
@@ -326,7 +502,10 @@
     <script type="module">
         // pretext.js measures text layout without needing hidden DOM measurement nodes.
         // The page uses it after every zoom change to keep the footer honest.
-        import { prepare, layout } from 'https://cdn.jsdelivr.net/gh/devdarren7/pretext-js@latest/src/index.js';
+        import {
+            layoutWithLines,
+            prepareWithSegments,
+        } from 'https://cdn.jsdelivr.net/gh/devdarren7/pretext-js@latest/src/index.js';
 
         // The shared helpers are loaded from reader-layout.js so production code and
         // the simple browser test page exercise the same calculations.
@@ -334,66 +513,254 @@
             DEFAULT_SIZE_INDEX,
             READER_LINE_HEIGHT,
             READER_SIZES,
-            formatLayoutStats,
             getLocation,
             getNextSizeIndex,
-            getProgressPercent,
-            getReadableText,
+            getPageProgressPercent,
             getReaderFont,
             getZoomPercent,
+            paginateLines,
         } = window.ReaderLayout;
 
         // These element references are the DOM boundary for the feature. Everything
         // below this point either reads current layout or paints the calculated state.
         const root = document.documentElement;
+        const screen = document.querySelector('.screen');
         const readerText = document.getElementById('readerText');
         const zoomOut = document.getElementById('zoomOut');
         const zoomIn = document.getElementById('zoomIn');
+        const previousPage = document.getElementById('previousPage');
+        const nextPage = document.getElementById('nextPage');
         const zoomValue = document.getElementById('zoomValue');
         const layoutStats = document.getElementById('layoutStats');
+        const pageLabel = document.getElementById('pageLabel');
         const locationLabel = document.getElementById('locationLabel');
 
         let sizeIndex = DEFAULT_SIZE_INDEX;
+        let pageIndex = 0;
+        let currentLines = [];
+        let currentPages = [[]];
+        let lastWheelZoomAt = 0;
+        let currentColumnCount = 1;
+        let currentLinesPerColumn = 1;
+        const LIQUID_WAVE_RADIUS = 300;
+        const LIQUID_WAVE_STRENGTH = 14;
+
+        // This resume text keeps the complete PDF content but uses hard line breaks
+        // and ASCII bullet markers so pretext.js can paginate something that reads
+        // like an actual resume instead of one long paragraph.
+        const resumeSourceText = [
+            'PROFESSIONAL SUMMARY',
+            'Tech Lead and Senior Software Engineer with strong experience influencing architecture, improving distributed systems, and building reliable enterprise platforms.',
+            'Background includes C#/.NET, SQL Server, REST/SOAP APIs, TCP-based integrations, observability, production support, and high-volume transaction processing.',
+            'Known for contributing to system design decisions, improving platform reliability, mentoring engineers, and helping teams evolve complex production systems while applying modern AI-assisted development workflows.',
+            '',
+            'CORE EXPERTISE',
+            'Platform and Systems: Distributed systems, platform services, high-volume transaction systems, system integration, production reliability.',
+            'Engineering: C#/.NET, SQL Server, REST APIs, SOAP, TCP integrations, C++, JavaScript, TypeScript, Python.',
+            'Frontend: React.js, AngularJS, JavaScript, TypeScript, HTML, CSS, Bootstrap.',
+            'Data: SQL Server, T-SQL, stored procedures, SSIS, data warehousing, reporting, Oracle.',
+            'Cloud and Containers: AWS foundational knowledge, Azure foundational knowledge, Azure AD, Docker fundamentals.',
+            'AI-Assisted Development: GitHub Copilot, agents, planning workflows, background processing, reusable prompts, custom instructions, skills, AI-assisted code review.',
+            'AI Integration: Basic OpenAI API integration concepts, prompt-based workflows, automation support for development tasks.',
+            'Operational Excellence: Observability, distributed logging, troubleshooting, application monitoring, system stabilization.',
+            'Leadership: Tech Lead, mentoring, code reviews, cross-team alignment, Tech Talks, knowledge sharing, stakeholder communication.',
+            '',
+            'SELECTED IMPACT',
+            '- Influenced architecture and system design decisions across platform components supporting global electronic transaction systems.',
+            '- Improved operational reliability by strengthening observability, distributed logging, and application performance monitoring used across development teams.',
+            '- Helped align U.S. and Brazil codebases, enabling shared capabilities across U.S., Brazil, and El Salvador teams while reducing duplicated engineering effort.',
+            '- Supported stabilization of the Brazil Host platform, contributing to major uptime and reliability improvements for business-critical transaction processing.',
+            '- Led cross-regional Tech Talks that improved engineering alignment; 75% of participants rated sessions Very Good or Excellent, and 47% reported positive impact on productivity and work quality.',
+            '- Pioneered AI-assisted engineering workflows using GitHub Copilot, VS Code workspaces, reusable prompts, custom instructions, skills, background processing, planning workflows, agents, and patterns to reduce repetitive work and improve delivery consistency.',
+            '- Applied AI-assisted development practices to support multi-application interface changes, code review preparation, database/schema evaluation, documentation, and repetitive implementation tasks.',
+            '- Strengthened security and governance through Azure AD single sign-on, Fortanix-based encryption initiatives, and platform stability improvements.',
+            '',
+            'PROFESSIONAL EXPERIENCE',
+            'epay, a Euronet Worldwide Company',
+            'Tech Lead / Senior Software Engineer | 2022 - Present',
+            '- Influence architectural decisions and contribute to the design and evolution of platform components supporting high-volume global transaction systems.',
+            '- Collaborate with senior engineers, technical leads, and business stakeholders to evaluate trade-offs across scalability, performance, security, maintainability, and operational complexity.',
+            '- Design and implement platform services, integrations, and enterprise application enhancements using C#/.NET, SQL Server, REST APIs, and distributed system patterns.',
+            '- Drive improvements within existing architecture by identifying technical debt, troubleshooting friction, logging gaps, and duplicated implementation patterns across systems.',
+            '- Improve observability and operational support through distributed logging, transaction tracking, and application monitoring capabilities used by multiple teams.',
+            '- Use VS Code multi-root workspaces, GitHub Copilot, reusable prompts, custom instructions, skills, instruction files, planning workflows, and agents to support multi-application development, interface implementation, documentation, and code review preparation.',
+            '- Leverage background processing and Copilot agent planning workflows to plan related changes across multiple applications and improve output in selected repetitive implementation workflows.',
+            '- Use AI-assisted tooling and database-aware extensions to support code analysis, pull request review preparation, database/schema evaluation, and implementation impact analysis.',
+            '- Support secure platform evolution through Azure AD single sign-on across multiple internal applications and Fortanix-based encryption initiatives.',
+            '- Mentor engineers through code reviews, design discussions, troubleshooting guidance, onboarding support, and practical engineering standards.',
+            '- Facilitate Tech Talks and working sessions across regions to improve engineering alignment, code quality, logging practices, task breakdown, and AI-assisted development adoption.',
+            '',
+            'epay, a Euronet Worldwide Company',
+            'Senior Software Engineer | 2014 - 2022',
+            '- Developed and enhanced enterprise software systems using C#/.NET, C++, SQL Server, REST/SOAP APIs, TCP socket integrations, and platform services.',
+            '- Built and maintained client and partner integrations using REST, SOAP, and TCP-based communication for high-volume transaction processing environments.',
+            '- Created high-volume reports and data processing jobs using SQL Server stored procedures, SSIS, and data warehouse techniques.',
+            '- Developed shared observability and logging capabilities to improve transaction tracking, troubleshooting, reliability, and production support.',
+            '- Refactored, updated, merged, and standardized legacy code across repositories and international subsidiaries to improve maintainability and code reuse.',
+            '- Supported production environments by diagnosing complex integration failures, performance issues, data inconsistencies, and transaction-processing problems.',
+            '- Participated in Agile/Scrum ceremonies, estimation, design discussions, release activities, and code reviews while supporting and training engineers.',
+            '',
+            'EARLIER EXPERIENCE',
+            'Software Developer / Business Analyst / Contractor',
+            '- Delivered enterprise software solutions across technology, finance, automotive, pharmaceutical, consumer goods, and industrial sectors.',
+            '- Built business applications, reporting tools, integrations, scheduling systems, fleet management systems, and project management applications.',
+            '- Worked across requirements analysis, software design, development, testing, troubleshooting, stakeholder communication, documentation, and project delivery.',
+            '',
+            'EDUCATION AND TRAINING',
+            'FIAP - Faculdade de Informatica e Administracao Paulista | Software Development Technology / Computer Programming.',
+            'Machine Learning - Coursera | SQL Server Training: Performance, Security, Data Migration, Indexes, Jobs | Microsoft ASP.NET Web Applications.',
+            '',
+            'LANGUAGES',
+            'Portuguese | English',
+        ].join('\n');
 
         // pretext.js needs the text, font, width, and line height. This wrapper keeps
-        // that integration in one place so the rest of the code can stay easy to test.
+        // the rich line-layout integration in one place so rendering can focus on motion.
         function measureWithPretext(text, fontSize, maxWidth) {
             const lineHeight = Math.round(fontSize * READER_LINE_HEIGHT);
-            const prepared = prepare(text, getReaderFont(fontSize));
+            const prepared = prepareWithSegments(text, getReaderFont(fontSize), { whiteSpace: 'pre-wrap' });
 
             return {
                 maxWidth,
                 lineHeight,
-                result: layout(prepared, maxWidth, lineHeight),
+                result: layoutWithLines(prepared, maxWidth, lineHeight),
             };
         }
 
-        // Capture the readable paragraph once. Decorative child markup, such as the
-        // cursor line, is stripped out by getReadableText before measurement.
-        const sourceText = getReadableText(readerText);
+        // Creates one absolutely positioned line. Absolute positioning lets the page
+        // animate from one measured layout to another instead of relying on browser
+        // paragraph wrapping, which would snap instantly.
+        function createLineElement(line, index, lineHeight) {
+            const lineElement = document.createElement('div');
+            lineElement.className = 'reader-line';
+            appendMeasuredWords(lineElement, line.text.trimEnd());
+            lineElement.style.top = `${index * lineHeight}px`;
+            applyResumeLineStyle(lineElement, line.text);
 
-        // Applies a zoom stop, waits for the browser to paint it, then asks pretext.js
-        // what the new text layout looks like at the actual rendered width.
-        function updateReaderZoom() {
+            return lineElement;
+        }
+
+        // Each measured line is split into word spans so the liquid click effect can
+        // wobble nearby words individually while preserving the exact pretext.js line.
+        function appendMeasuredWords(lineElement, text) {
+            const parts = text.match(/\S+|\s+/g) || [''];
+
+            parts.forEach((part) => {
+                if (/^\s+$/.test(part)) {
+                    lineElement.appendChild(document.createTextNode(part));
+                    return;
+                }
+
+                const wordElement = document.createElement('span');
+                const wordTextElement = document.createElement('span');
+                wordElement.className = 'reader-word';
+                wordTextElement.className = 'reader-word-text';
+                wordTextElement.textContent = part;
+                wordElement.appendChild(wordTextElement);
+                lineElement.appendChild(wordElement);
+            });
+        }
+
+        // pretext.js gives us plain measured line text. This helper adds resume-like
+        // visual hierarchy back onto those measured lines without changing pagination.
+        function applyResumeLineStyle(lineElement, text) {
+            const trimmedText = text.trim();
+            const sectionHeadings = new Set([
+                'RAFAEL GOMES DOS SANTOS',
+                'PROFESSIONAL SUMMARY',
+                'CORE EXPERTISE',
+                'SELECTED IMPACT',
+                'PROFESSIONAL EXPERIENCE',
+                'EARLIER EXPERIENCE',
+                'EDUCATION AND TRAINING',
+                'LANGUAGES',
+            ]);
+
+            if (sectionHeadings.has(trimmedText)) {
+                lineElement.classList.add('reader-line-heading');
+            } else if (
+                trimmedText.startsWith('Tech Lead /') ||
+                trimmedText.startsWith('Senior Software Engineer') ||
+                trimmedText.startsWith('Software Developer /') ||
+                trimmedText.startsWith('epay,')
+            ) {
+                lineElement.classList.add('reader-line-role');
+            } else if (trimmedText.includes('@') || trimmedText.includes('linkedin.com')) {
+                lineElement.classList.add('reader-line-contact');
+            } else if (trimmedText === '') {
+                lineElement.classList.add('reader-line-meta');
+            }
+        }
+
+        // Redraws the current measured spread without transition effects. Each column
+        // is treated as its own page, so a desktop spread shows two real pages at once.
+        function renderMeasuredSpread(lineHeight) {
+            const incomingFragment = document.createDocumentFragment();
+
+            for (let columnIndex = 0; columnIndex < currentColumnCount; columnIndex++) {
+                const columnElement = document.createElement('div');
+                columnElement.className = 'reader-column';
+                const columnPage = currentPages[pageIndex + columnIndex] || [];
+
+                columnPage.forEach((line, index) => {
+                    columnElement.appendChild(createLineElement(line, index, lineHeight));
+                });
+
+                incomingFragment.appendChild(columnElement);
+            }
+
+            readerText.replaceChildren();
+            readerText.appendChild(incomingFragment);
+            currentLines = currentPages.slice(pageIndex, pageIndex + currentColumnCount).flat();
+        }
+
+        // Paints the footer from measured pagination state. The progress bar now comes
+        // from the visible page spread, making it a real reading position.
+        function updateReaderChrome(linesPerPage) {
+            const pageCount = currentPages.length;
+            const lastVisiblePageIndex = Math.min(pageIndex + currentColumnCount - 1, pageCount - 1);
+            const pageLabelText = pageIndex === lastVisiblePageIndex
+                ? `Page ${pageIndex + 1} of ${pageCount}`
+                : `Pages ${pageIndex + 1}-${lastVisiblePageIndex + 1} of ${pageCount}`;
+            const spreadLabel = currentColumnCount > 1 ? '2-page spread' : '1-page view';
+
+            zoomValue.textContent = `${getZoomPercent(READER_SIZES[sizeIndex])}%`;
+            pageLabel.textContent = pageLabelText;
+            layoutStats.textContent = `${linesPerPage} lines/page / ${spreadLabel}`;
+            locationLabel.textContent = `Loc ${getLocation(READER_SIZES[sizeIndex], pageIndex * linesPerPage + 1)}`;
+            root.style.setProperty('--progress', `${getPageProgressPercent(lastVisiblePageIndex, pageCount)}%`);
+
+            zoomOut.disabled = sizeIndex === 0;
+            zoomIn.disabled = sizeIndex === READER_SIZES.length - 1;
+            previousPage.disabled = pageIndex === 0;
+            nextPage.disabled = lastVisiblePageIndex === pageCount - 1;
+        }
+
+        // Rebuilds all pages from measured pretext.js lines. Zooming and resizing call
+        // this because both actions can change line wrapping and therefore page count.
+        function rebuildMeasuredPages() {
             const fontSize = READER_SIZES[sizeIndex];
             root.style.setProperty('--reader-size', `${fontSize}px`);
 
             // Measure after the CSS variable has painted, matching what the reader actually sees.
             requestAnimationFrame(() => {
                 try {
-                    const maxWidth = Math.round(readerText.getBoundingClientRect().width);
-                    const measurement = measureWithPretext(sourceText, fontSize, maxWidth);
-                    const lineCount = measurement.result.lineCount;
+                    const readerBounds = readerText.getBoundingClientRect();
+                    const computedStyle = window.getComputedStyle(readerText);
+                    const columnGap = Number.parseFloat(computedStyle.columnGap) || 0;
+                    currentColumnCount = window.matchMedia('(max-width: 560px)').matches ? 1 : 2;
+                    const maxWidth = Math.round((readerBounds.width - columnGap * (currentColumnCount - 1)) / currentColumnCount);
+                    const visibleHeight = readerBounds.height;
+                    const measurement = measureWithPretext(resumeSourceText, fontSize, maxWidth);
+                    currentLinesPerColumn = Math.max(1, Math.floor(visibleHeight / measurement.lineHeight));
+                    const linesPerPage = currentLinesPerColumn;
+                    currentPages = paginateLines(measurement.result.lines, linesPerPage);
+                    pageIndex = Math.min(pageIndex, currentPages.length - 1);
+                    pageIndex = Math.max(0, pageIndex - (pageIndex % currentColumnCount));
 
-                    // Update all reader chrome from the same measurement result so the
-                    // zoom percentage, location, progress, and stats stay in sync.
-                    zoomValue.textContent = `${getZoomPercent(fontSize)}%`;
-                    layoutStats.textContent = formatLayoutStats(lineCount, measurement.result.height);
-                    locationLabel.textContent = `Loc ${getLocation(fontSize, lineCount)}`;
-                    root.style.setProperty('--progress', `${getProgressPercent(lineCount)}%`);
+                    updateReaderChrome(linesPerPage);
 
-                    zoomOut.disabled = sizeIndex === 0;
-                    zoomIn.disabled = sizeIndex === READER_SIZES.length - 1;
+                    renderMeasuredSpread(measurement.lineHeight);
                 } catch (error) {
                     console.error('Unable to measure Kindle reader text with pretext.js.', error);
                     layoutStats.textContent = 'Measure error';
@@ -404,20 +771,103 @@
         // The small A moves to the previous allowed zoom stop.
         zoomOut.addEventListener('click', () => {
             sizeIndex = getNextSizeIndex(sizeIndex, -1);
-            updateReaderZoom();
+            pageIndex = 0;
+            rebuildMeasuredPages();
         });
 
         // The large A moves to the next allowed zoom stop.
         zoomIn.addEventListener('click', () => {
             sizeIndex = getNextSizeIndex(sizeIndex, 1);
-            updateReaderZoom();
+            pageIndex = 0;
+            rebuildMeasuredPages();
+        });
+
+        // Mouse wheel zoom uses the same discrete stops as the Aa controls. A small
+        // throttle prevents high-resolution trackpads from jumping through many sizes
+        // in a single gesture.
+        screen.addEventListener('wheel', (event) => {
+            event.preventDefault();
+
+            const now = performance.now();
+            if (now - lastWheelZoomAt < 160 || Math.abs(event.deltaY) < 6) {
+                return;
+            }
+
+            const direction = event.deltaY < 0 ? 1 : -1;
+            const nextSizeIndex = getNextSizeIndex(sizeIndex, direction);
+
+            if (nextSizeIndex !== sizeIndex) {
+                sizeIndex = nextSizeIndex;
+                pageIndex = 0;
+                rebuildMeasuredPages();
+            }
+
+            lastWheelZoomAt = now;
+        }, { passive: false });
+
+        // Previous and next move across measured page slices. There is no scroll jump
+        // because each page is rendered from an exact line range returned by pretext.js.
+        previousPage.addEventListener('click', () => {
+            pageIndex = Math.max(0, pageIndex - currentColumnCount);
+            rebuildMeasuredPages();
+        });
+
+        nextPage.addEventListener('click', () => {
+            pageIndex = Math.min(currentPages.length - 1, pageIndex + currentColumnCount);
+            rebuildMeasuredPages();
+        });
+
+        // A click on the reading surface behaves like tapping water: a visual ripple
+        // expands from the pointer, and nearby measured word spans wobble with a
+        // distance-based delay so the wave appears to travel outward.
+        screen.addEventListener('click', (event) => {
+            if (event.target.closest('button')) {
+                return;
+            }
+
+            const screenBounds = screen.getBoundingClientRect();
+            const clickX = event.clientX;
+            const clickY = event.clientY;
+
+            screen.style.setProperty('--ripple-x', `${clickX - screenBounds.left}px`);
+            screen.style.setProperty('--ripple-y', `${clickY - screenBounds.top}px`);
+            screen.classList.remove('screen-rippling');
+            void screen.offsetWidth;
+            screen.classList.add('screen-rippling');
+
+            document.querySelectorAll('.reader-word').forEach((wordElement) => {
+                const wordBounds = wordElement.getBoundingClientRect();
+                const wordX = wordBounds.left + wordBounds.width / 2;
+                const wordY = wordBounds.top + wordBounds.height / 2;
+                const deltaX = wordX - clickX;
+                const deltaY = wordY - clickY;
+                const distance = Math.hypot(deltaX, deltaY);
+
+                if (distance > LIQUID_WAVE_RADIUS) {
+                    return;
+                }
+
+                const falloff = 1 - distance / LIQUID_WAVE_RADIUS;
+                const angle = Math.atan2(deltaY, deltaX);
+                const strength = LIQUID_WAVE_STRENGTH * falloff;
+
+                const wordTextElement = wordElement.querySelector('.reader-word-text');
+                wordElement.classList.remove('reader-word-wobble');
+                wordTextElement.classList.remove('reader-word-text-reflect');
+                wordElement.style.setProperty('--wobble-x', `${Math.cos(angle) * strength}px`);
+                wordElement.style.setProperty('--wobble-y', `${Math.sin(angle) * strength * 0.62}px`);
+                wordElement.style.setProperty('--wobble-delay', `${Math.round(distance * 0.85)}ms`);
+                void wordElement.offsetWidth;
+                wordElement.classList.add('reader-word-wobble');
+                wordTextElement.classList.add('reader-word-text-reflect');
+            });
         });
 
         // Width changes affect wrapping, so a resize needs a fresh pretext.js measure.
-        window.addEventListener('resize', updateReaderZoom);
+        window.addEventListener('resize', rebuildMeasuredPages);
 
         // Initial measurement replaces the placeholder footer text after the module loads.
-        updateReaderZoom();
+        rebuildMeasuredPages();
     </script>
 </body>
 </html>

@@ -72,9 +72,10 @@ Open `C:\github_\pretext-resume\tests\reader-layout.test.html` in a browser.
 
 ## Design Direction
 
-- The page should resemble a Kindle or e-ink reading screen.
+- The page should feel like a Kindle-inspired e-ink reading experience where the
+  whole browser viewport is the screen.
 - Keep the interface calm, readable, and tactile rather than flashy.
-- Favor paper-like texture, restrained contrast, realistic device chrome, and
+- Favor paper-like texture, restrained contrast, full-viewport web layout, and
   strong reading rhythm.
 - Interactive controls should feel like Kindle reading controls, especially text
   sizing controls such as `Aa`.
@@ -87,13 +88,41 @@ Open `C:\github_\pretext-resume\tests\reader-layout.test.html` in a browser.
   GitHub Pages without a package manager or bundler.
 - `reader-layout.js` uses a classic browser script instead of an ES module so
   both the app and local `file://` tests can load the same production helpers.
-- The Kindle look uses a dark device bezel around a warm e-ink screen with subtle
-  texture and reading chrome.
-- The top bar contains the project label, `Aa` text zoom controls, and a battery
-  indicator to mimic Kindle reading UI.
-- The footer contains location, progress, and `pretext.js` measurement feedback.
+- The visual frame should not exist: avoid adding a card, border, shadow, rounded
+  panel, or Kindle hardware bezel around the reader. Keep the e-ink texture and
+  reading chrome as the main Kindle-inspired cues.
+- The top bar contains the project label and `Aa` text zoom controls.
+- The footer contains page status, location, progress, page controls, and
+  `pretext.js` measurement feedback.
 - Text zoom changes the CSS reader font size and then asks `pretext.js` to
   remeasure line count and height, keeping the UI tied to actual text layout.
+- The Kindle reader demonstrates animated reflow by using `pretext.js`
+  `prepareWithSegments` and `layoutWithLines` to render individual measured text
+  lines, then animate old lines out and new measured lines in after a zoom
+  change.
+- Glitch-free pagination is driven by measured `pretext.js` lines. The app slices
+  those lines into page arrays based on the visible reader height and line height,
+  then redraws exact measured slices instead of using scroll position or
+  character-count guesses.
+- On desktop, the reader should use a measured two-page spread to leverage the
+  full browser width. Measure text against the computed column width, treat each
+  column as its own page, and advance pagination by a full visible spread.
+- Zoom and page changes should use clean transitions with no visual animation,
+  blur, tilt, stretch, or page-turn effects unless the user explicitly asks to add
+  effects back. Mouse wheel zoom over the reader should use the same discrete
+  zoom stops as the `Aa` buttons.
+- The reader may include an intentional liquid screen click effect: measured lines
+  are split into word spans, and clicks on the reading surface create a ripple plus
+  distance-based word wobble and reflective shimmer. Keep transform wobble on the
+  outer word span and reflection/filter animation on an inner text span so the two
+  effects do not override each other. Keep this separate from zoom and pagination
+  transitions, which should remain clean.
+- The current reader copy is based on text extracted from the user's uploaded
+  resume PDF. Keep the full resume represented in the paginated reader unless the
+  user explicitly asks for a shorter demo.
+- The resume text should stay structured with section headings, role headers,
+  contact lines, and bullet-style entries. The renderer may add CSS classes to
+  measured `pretext.js` lines to restore resume hierarchy after line measurement.
 - Reader zoom calculations are kept in small pure functions in
   `reader-layout.js` and exposed through `window.ReaderLayout` so the no-build
   browser tests can exercise production logic.

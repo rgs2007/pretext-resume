@@ -64,6 +64,30 @@
         return clamp(Math.round(lineCount * PROGRESS_PER_LINE), MIN_PROGRESS, MAX_PROGRESS);
     }
 
+    // Converts a current page and total page count into a real measured progress
+    // value. Pagination uses this instead of the older decorative line-count progress.
+    function getPageProgressPercent(currentPageIndex, pageCount) {
+        if (pageCount <= 1) {
+            return 100;
+        }
+
+        return Math.round(((currentPageIndex + 1) / pageCount) * 100);
+    }
+
+    // Splits pretext.js measured lines into exact pages. This is the core of the
+    // glitch-free pagination effect: page boundaries come from measured line height
+    // and visible reader height instead of guessed character counts.
+    function paginateLines(lines, linesPerPage) {
+        const safeLinesPerPage = Math.max(1, linesPerPage);
+        const pages = [];
+
+        for (let index = 0; index < lines.length; index += safeLinesPerPage) {
+            pages.push(lines.slice(index, index + safeLinesPerPage));
+        }
+
+        return pages.length > 0 ? pages : [[]];
+    }
+
     // Builds a Kindle-like location number from the current text size and line count.
     // Larger text produces a later-looking location because fewer words fit on screen.
     function getLocation(fontSize, lineCount) {
@@ -85,9 +109,11 @@
         formatLayoutStats,
         getLocation,
         getNextSizeIndex,
+        getPageProgressPercent,
         getProgressPercent,
         getReadableText,
         getReaderFont,
         getZoomPercent,
+        paginateLines,
     });
 })(window);
