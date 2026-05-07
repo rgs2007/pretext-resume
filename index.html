@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pretext.js Hello World - Animated Text Layout</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', system-ui, sans-serif;
+            overflow: hidden;
+        }
+
+        .container {
+            position: relative;
+            width: 600px;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+        }
+
+        canvas {
+            width: 100%;
+            height: 200px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .info {
+            color: white;
+            text-align: center;
+            font-size: 14px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .info h2 {
+            margin-bottom: 10px;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .metrics {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .metric {
+            padding: 5px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .controls {
+            text-align: center;
+        }
+
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            margin: 0 5px;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .title {
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">✨ Pretext.js Hello World ✨</div>
+        <canvas id="canvas"></canvas>
+        <div class="info">
+            <h2 id="title">Measuring Beautiful Text</h2>
+            <div class="metrics">
+                <div class="metric">Lines: <strong id="lineCount">-</strong></div>
+                <div class="metric">Height: <strong id="height">-</strong>px</div>
+                <div class="metric">Width: <strong id="width">-</strong>px</div>
+            </div>
+        </div>
+        <div class="controls">
+            <button onclick="changeText()">Change Text</button>
+            <button onclick="toggleWidth()">Toggle Width</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { prepare, layout } from 'https://cdn.jsdelivr.net/gh/devdarren7/pretext-js@latest/src/index.js';
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let animationId;
+        let time = 0;
+
+        const texts = [
+            'Hello, World! Welcome to pretext.js text measurement.',
+            'DOM-free text layout with canvas measurement power!',
+            'Watch this text dance with dynamic measurements.',
+            'Perfectly measured typography in your browser.',
+        ];
+
+        let currentTextIndex = 0;
+        let maxWidth = 500;
+        const lineHeight = 35;
+        const font = '700 24px Inter, system-ui';
+
+        // Set canvas resolution
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+            canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        }
+        resizeCanvas();
+
+        function getLayoutLines(text) {
+            // Manual layout using pretext metrics
+            const words = text.split(' ');
+            const lines = [];
+            let currentLine = [];
+            let currentWidth = 0;
+
+            ctx.font = font;
+
+            for (const word of words) {
+                const wordWidth = ctx.measureText(word + ' ').width;
+                
+                if (currentWidth + wordWidth > maxWidth && currentLine.length > 0) {
+                    lines.push(currentLine.join(' '));
+                    currentLine = [word];
+                    currentWidth = wordWidth;
+                } else {
+                    currentLine.push(word);
+                    currentWidth += wordWidth;
+                }
+            }
+
+            if (currentLine.length > 0) {
+                lines.push(currentLine.join(' '));
+            }
+
+            return lines;
+        }
+
+        function updateMetrics() {
+            const text = texts[currentTextIndex];
+            const prepared = prepare(text, font);
+            const result = layout(prepared, maxWidth, lineHeight);
+
+            document.getElementById('lineCount').textContent = result.lineCount;
+            document.getElementById('height').textContent = Math.round(result.height);
+            document.getElementById('width').textContent = maxWidth;
+            document.getElementById('title').textContent = `"${text.substring(0, 30)}..."`;
+
+            return result;
+        }
+
+        function animate() {
+            time += 0.02;
+            const text = texts[currentTextIndex];
+            const lines = getLayoutLines(text);
+
+            // Clear canvas with gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, 'rgba(102, 126, 234, 0.1)');
+            gradient.addColorStop(1, 'rgba(118, 75, 162, 0.1)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw text with wave animation
+            ctx.font = font;
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+
+            let wordCount = 0;
+
+            lines.forEach((lineText, lineIndex) => {
+                const lineY = 40 + lineIndex * lineHeight;
+                let x = 40;
+                const words = lineText.split(' ');
+
+                for (const word of words) {
+                    // Wave effect
+                    const offsetY = Math.sin(time + wordCount * 0.3) * 8;
+                    const offsetX = Math.cos(time + wordCount * 0.2) * 4;
+                    const opacity = 0.7 + Math.sin(time + wordCount * 0.15) * 0.3;
+
+                    ctx.globalAlpha = opacity;
+                    ctx.fillText(word, x + offsetX, lineY + offsetY);
+                    ctx.globalAlpha = 1;
+
+                    x += ctx.measureText(word + ' ').width;
+                    wordCount++;
+                }
+            });
+
+            // Draw border
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.roundRect(20, 20, canvas.width - 40, canvas.height - 40, 10);
+            ctx.stroke();
+
+            animationId = requestAnimationFrame(animate);
+        }
+
+        // Polyfill for roundRect
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+                if (w < 2 * r) r = w / 2;
+                if (h < 2 * r) r = h / 2;
+                this.beginPath();
+                this.moveTo(x + r, y);
+                this.arcTo(x + w, y, x + w, y + h, r);
+                this.arcTo(x + w, y + h, x, y + h, r);
+                this.arcTo(x, y + h, x, y, r);
+                this.arcTo(x, y, x + r, y, r);
+                this.closePath();
+                return this;
+            };
+        }
+
+        // Event handlers
+        window.changeText = function () {
+            currentTextIndex = (currentTextIndex + 1) % texts.length;
+            updateMetrics();
+        };
+
+        window.toggleWidth = function () {
+            maxWidth = maxWidth === 500 ? 300 : 500;
+            updateMetrics();
+        };
+
+        window.addEventListener('resize', resizeCanvas);
+
+        // Initialize and start animation
+        updateMetrics();
+        animate();
+    </script>
+</body>
+</html>
