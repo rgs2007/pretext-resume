@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pretext.js Hello World - Animated Text Layout</title>
+    <title>Pretext Resume - Kindle View</title>
     <style>
         * {
             margin: 0;
@@ -11,266 +11,413 @@
             box-sizing: border-box;
         }
 
+        :root {
+            color-scheme: light;
+
+            /* Shared colors keep the Kindle shell and e-ink screen consistent. */
+            --ink: #20201d;
+            --soft-ink: #55534c;
+            --paper: #e8e5d8;
+            --paper-dark: #d5d0bf;
+            --bezel: #252522;
+            --bezel-edge: #11110f;
+            --shadow: rgba(16, 16, 14, 0.34);
+
+            /* JavaScript updates --reader-size when the user presses the Aa controls. */
+            --reader-size: 20px;
+            --reader-leading: 1.62;
+        }
+
         body {
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            font-family: 'Inter', system-ui, sans-serif;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            /* The cool desk background helps the warm e-ink panel read as a physical object. */
+            background:
+                radial-gradient(circle at top left, rgba(255, 255, 255, 0.72), transparent 34rem),
+                linear-gradient(135deg, #a9b0aa 0%, #6f7673 48%, #454a48 100%);
+            font-family: Georgia, "Times New Roman", serif;
+            color: var(--ink);
             overflow: hidden;
         }
 
-        .container {
+        .kindle {
+            /* The outer frame is intentionally thick, matching the older Kindle silhouette. */
+            width: min(92vw, 650px);
+            aspect-ratio: 0.72;
+            padding: clamp(18px, 3vw, 32px);
+            border-radius: 34px;
+            background:
+                linear-gradient(145deg, rgba(255, 255, 255, 0.08), transparent 22%),
+                linear-gradient(315deg, var(--bezel-edge), var(--bezel));
+            box-shadow:
+                0 36px 70px var(--shadow),
+                inset 0 1px 0 rgba(255, 255, 255, 0.16),
+                inset 0 -3px 12px rgba(0, 0, 0, 0.55);
             position: relative;
-            width: 600px;
-            height: 400px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 40px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .kindle::after {
+            /* This small highlight suggests the physical bottom lip of the device. */
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: 12px;
+            width: 58px;
+            height: 4px;
+            transform: translateX(-50%);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.18);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        .screen {
+            height: 100%;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            border-radius: 9px;
+            /* Subtle horizontal grain keeps the screen e-ink-like without hurting legibility. */
+            background:
+                linear-gradient(rgba(32, 32, 29, 0.035) 1px, transparent 1px),
+                radial-gradient(circle at 22% 18%, rgba(255, 255, 255, 0.5), transparent 18rem),
+                linear-gradient(180deg, #f2efe2 0%, var(--paper) 55%, var(--paper-dark) 100%);
+            background-size: 100% 4px, auto, auto;
+            box-shadow:
+                inset 0 0 0 1px rgba(0, 0, 0, 0.32),
+                inset 0 0 34px rgba(36, 34, 29, 0.16);
+            overflow: hidden;
+        }
+
+        .status-bar,
+        .reading-footer {
             display: flex;
-            flex-direction: column;
-            justify-content: space-around;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--soft-ink);
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: clamp(10px, 1.6vw, 13px);
+            letter-spacing: 0;
         }
 
-        canvas {
-            width: 100%;
-            height: 200px;
-            border-radius: 10px;
-            background: rgba(0, 0, 0, 0.1);
+        .status-bar {
+            padding: 16px 22px 8px;
+            border-bottom: 1px solid rgba(69, 67, 59, 0.2);
         }
 
-        .info {
-            color: white;
-            text-align: center;
-            font-size: 14px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        .status-title {
+            min-width: 116px;
         }
 
-        .info h2 {
-            margin-bottom: 10px;
-            font-size: 20px;
-            font-weight: 600;
+        .type-controls {
+            /* The Aa cluster mimics Kindle text settings while staying keyboard-accessible. */
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 3px 6px;
+            border: 1px solid rgba(85, 83, 76, 0.26);
+            border-radius: 4px;
+            background: rgba(232, 229, 216, 0.38);
         }
 
-        .metrics {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 10px;
-            font-size: 13px;
-            opacity: 0.9;
-        }
-
-        .metric {
-            padding: 5px 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-        }
-
-        .controls {
-            text-align: center;
-        }
-
-        button {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
+        .type-controls button {
+            width: 28px;
+            height: 26px;
+            border: 0;
+            border-radius: 3px;
+            background: transparent;
+            color: var(--ink);
+            font-family: Georgia, "Times New Roman", serif;
             cursor: pointer;
+        }
+
+        .type-controls button:hover,
+        .type-controls button:focus-visible {
+            outline: 1px solid rgba(32, 32, 29, 0.34);
+            background: rgba(85, 83, 76, 0.12);
+        }
+
+        .type-controls button:disabled {
+            color: rgba(85, 83, 76, 0.34);
+            cursor: default;
+        }
+
+        .zoom-out {
             font-size: 14px;
-            transition: all 0.3s ease;
-            margin: 0 5px;
         }
 
-        button:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
+        .zoom-in {
+            font-size: 22px;
+            line-height: 1;
         }
 
-        .title {
-            color: white;
-            font-size: 28px;
-            font-weight: 700;
+        .zoom-value {
+            min-width: 40px;
             text-align: center;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11px;
+            color: var(--soft-ink);
+        }
+
+        .battery {
+            /* The battery is drawn with CSS so the static page needs no image assets. */
+            width: 28px;
+            height: 13px;
+            border: 1px solid var(--soft-ink);
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .battery::before {
+            content: "";
+            position: absolute;
+            right: -4px;
+            top: 3px;
+            width: 3px;
+            height: 5px;
+            background: var(--soft-ink);
+        }
+
+        .battery::after {
+            content: "";
+            position: absolute;
+            left: 2px;
+            top: 2px;
+            width: 19px;
+            height: 7px;
+            background: var(--soft-ink);
+        }
+
+        .page {
+            padding: clamp(28px, 5vw, 52px);
+            overflow: hidden;
+        }
+
+        .eyebrow {
             margin-bottom: 20px;
-            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            letter-spacing: 1px;
+            color: var(--soft-ink);
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            max-width: 10ch;
+            font-size: clamp(38px, 8vw, 70px);
+            line-height: 0.94;
+            font-weight: 700;
+            letter-spacing: 0;
+        }
+
+        .subtitle {
+            max-width: 30ch;
+            margin-top: 20px;
+            color: #37352f;
+            /* The subtitle scales with the reader text so the page zoom feels unified. */
+            font-size: calc(var(--reader-size) + 2px);
+            line-height: 1.32;
+        }
+
+        .resume-note {
+            max-width: 42ch;
+            margin-top: clamp(28px, 5vw, 48px);
+            color: #2b2a25;
+            font-size: var(--reader-size);
+            line-height: var(--reader-leading);
+            text-align: justify;
+        }
+
+        .cursor-line {
+            display: inline-block;
+            width: 0.58em;
+            height: 0.08em;
+            margin-left: 0.14em;
+            background: var(--ink);
+            vertical-align: baseline;
+            animation: blink 1.5s steps(2, start) infinite;
+        }
+
+        .reading-footer {
+            padding: 10px 22px 18px;
+            border-top: 1px solid rgba(69, 67, 59, 0.18);
+        }
+
+        .layout-stats {
+            min-width: 128px;
+        }
+
+        .progress {
+            width: 38%;
+            height: 3px;
+            border-radius: 999px;
+            background: rgba(85, 83, 76, 0.28);
+            overflow: hidden;
+        }
+
+        .progress span {
+            display: block;
+            /* JavaScript writes --progress after pretext.js reports the new line count. */
+            width: var(--progress, 18%);
+            height: 100%;
+            background: var(--soft-ink);
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 560px) {
+            body {
+                overflow: auto;
+                padding: 18px 0;
+            }
+
+            .kindle {
+                width: 94vw;
+                min-height: 82vh;
+                aspect-ratio: auto;
+            }
+
+            .resume-note {
+                text-align: left;
+            }
+
+            .status-title,
+            .layout-stats {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="title">✨ Pretext.js Hello World ✨</div>
-        <canvas id="canvas"></canvas>
-        <div class="info">
-            <h2 id="title">Measuring Beautiful Text</h2>
-            <div class="metrics">
-                <div class="metric">Lines: <strong id="lineCount">-</strong></div>
-                <div class="metric">Height: <strong id="height">-</strong>px</div>
-                <div class="metric">Width: <strong id="width">-</strong>px</div>
-            </div>
-        </div>
-        <div class="controls">
-            <button onclick="changeText()">Change Text</button>
-            <button onclick="toggleWidth()">Toggle Width</button>
-        </div>
-    </div>
+    <main class="kindle" aria-label="Kindle-style resume preview">
+        <section class="screen">
+            <header class="status-bar">
+                <span class="status-title">Pretext Resume</span>
+                <div class="type-controls" aria-label="Text size controls">
+                    <button class="zoom-out" id="zoomOut" type="button" aria-label="Decrease text size">A</button>
+                    <span class="zoom-value" id="zoomValue">100%</span>
+                    <button class="zoom-in" id="zoomIn" type="button" aria-label="Increase text size">A</button>
+                </div>
+                <span class="battery" aria-label="Battery level"></span>
+            </header>
 
+            <article class="page">
+                <p class="eyebrow">Chapter 1 - Candidate Profile</p>
+                <h1>Rafael Gomes Santos</h1>
+                <p class="subtitle">Software builder, interface tinkerer, and careful reader of systems.</p>
+                <p class="resume-note" id="readerText">
+                    This page is being shaped as a calm e-ink resume: quiet contrast, long-form reading rhythm,
+                    and a device frame that feels closer to a Kindle than a web dashboard.
+                    <span class="cursor-line" aria-hidden="true"></span>
+                </p>
+            </article>
+
+            <footer class="reading-footer">
+                <span id="locationLabel">Loc 24</span>
+                <div class="progress" aria-hidden="true"><span></span></div>
+                <span class="layout-stats" id="layoutStats">Measuring...</span>
+            </footer>
+        </section>
+    </main>
+
+    <script src="./reader-layout.js"></script>
     <script type="module">
+        // pretext.js measures text layout without needing hidden DOM measurement nodes.
+        // The page uses it after every zoom change to keep the footer honest.
         import { prepare, layout } from 'https://cdn.jsdelivr.net/gh/devdarren7/pretext-js@latest/src/index.js';
 
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        let animationId;
-        let time = 0;
+        // The shared helpers are loaded from reader-layout.js so production code and
+        // the simple browser test page exercise the same calculations.
+        const {
+            DEFAULT_SIZE_INDEX,
+            READER_LINE_HEIGHT,
+            READER_SIZES,
+            formatLayoutStats,
+            getLocation,
+            getNextSizeIndex,
+            getProgressPercent,
+            getReadableText,
+            getReaderFont,
+            getZoomPercent,
+        } = window.ReaderLayout;
 
-        const texts = [
-            'Hello, World! Welcome to pretext.js text measurement.',
-            'DOM-free text layout with canvas measurement power!',
-            'Watch this text dance with dynamic measurements.',
-            'Perfectly measured typography in your browser.',
-        ];
+        // These element references are the DOM boundary for the feature. Everything
+        // below this point either reads current layout or paints the calculated state.
+        const root = document.documentElement;
+        const readerText = document.getElementById('readerText');
+        const zoomOut = document.getElementById('zoomOut');
+        const zoomIn = document.getElementById('zoomIn');
+        const zoomValue = document.getElementById('zoomValue');
+        const layoutStats = document.getElementById('layoutStats');
+        const locationLabel = document.getElementById('locationLabel');
 
-        let currentTextIndex = 0;
-        let maxWidth = 500;
-        const lineHeight = 35;
-        const font = '700 24px Inter, system-ui';
+        let sizeIndex = DEFAULT_SIZE_INDEX;
 
-        // Set canvas resolution
-        function resizeCanvas() {
-            canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-            canvas.height = canvas.offsetHeight * window.devicePixelRatio;
-            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-        }
-        resizeCanvas();
+        // pretext.js needs the text, font, width, and line height. This wrapper keeps
+        // that integration in one place so the rest of the code can stay easy to test.
+        function measureWithPretext(text, fontSize, maxWidth) {
+            const lineHeight = Math.round(fontSize * READER_LINE_HEIGHT);
+            const prepared = prepare(text, getReaderFont(fontSize));
 
-        function getLayoutLines(text) {
-            // Manual layout using pretext metrics
-            const words = text.split(' ');
-            const lines = [];
-            let currentLine = [];
-            let currentWidth = 0;
-
-            ctx.font = font;
-
-            for (const word of words) {
-                const wordWidth = ctx.measureText(word + ' ').width;
-                
-                if (currentWidth + wordWidth > maxWidth && currentLine.length > 0) {
-                    lines.push(currentLine.join(' '));
-                    currentLine = [word];
-                    currentWidth = wordWidth;
-                } else {
-                    currentLine.push(word);
-                    currentWidth += wordWidth;
-                }
-            }
-
-            if (currentLine.length > 0) {
-                lines.push(currentLine.join(' '));
-            }
-
-            return lines;
-        }
-
-        function updateMetrics() {
-            const text = texts[currentTextIndex];
-            const prepared = prepare(text, font);
-            const result = layout(prepared, maxWidth, lineHeight);
-
-            document.getElementById('lineCount').textContent = result.lineCount;
-            document.getElementById('height').textContent = Math.round(result.height);
-            document.getElementById('width').textContent = maxWidth;
-            document.getElementById('title').textContent = `"${text.substring(0, 30)}..."`;
-
-            return result;
-        }
-
-        function animate() {
-            time += 0.02;
-            const text = texts[currentTextIndex];
-            const lines = getLayoutLines(text);
-
-            // Clear canvas with gradient
-            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, 'rgba(102, 126, 234, 0.1)');
-            gradient.addColorStop(1, 'rgba(118, 75, 162, 0.1)');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Draw text with wave animation
-            ctx.font = font;
-            ctx.fillStyle = '#ffffff';
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'top';
-
-            let wordCount = 0;
-
-            lines.forEach((lineText, lineIndex) => {
-                const lineY = 40 + lineIndex * lineHeight;
-                let x = 40;
-                const words = lineText.split(' ');
-
-                for (const word of words) {
-                    // Wave effect
-                    const offsetY = Math.sin(time + wordCount * 0.3) * 8;
-                    const offsetX = Math.cos(time + wordCount * 0.2) * 4;
-                    const opacity = 0.7 + Math.sin(time + wordCount * 0.15) * 0.3;
-
-                    ctx.globalAlpha = opacity;
-                    ctx.fillText(word, x + offsetX, lineY + offsetY);
-                    ctx.globalAlpha = 1;
-
-                    x += ctx.measureText(word + ' ').width;
-                    wordCount++;
-                }
-            });
-
-            // Draw border
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-            ctx.lineWidth = 2;
-            ctx.roundRect(20, 20, canvas.width - 40, canvas.height - 40, 10);
-            ctx.stroke();
-
-            animationId = requestAnimationFrame(animate);
-        }
-
-        // Polyfill for roundRect
-        if (!CanvasRenderingContext2D.prototype.roundRect) {
-            CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
-                if (w < 2 * r) r = w / 2;
-                if (h < 2 * r) r = h / 2;
-                this.beginPath();
-                this.moveTo(x + r, y);
-                this.arcTo(x + w, y, x + w, y + h, r);
-                this.arcTo(x + w, y + h, x, y + h, r);
-                this.arcTo(x, y + h, x, y, r);
-                this.arcTo(x, y, x + r, y, r);
-                this.closePath();
-                return this;
+            return {
+                maxWidth,
+                lineHeight,
+                result: layout(prepared, maxWidth, lineHeight),
             };
         }
 
-        // Event handlers
-        window.changeText = function () {
-            currentTextIndex = (currentTextIndex + 1) % texts.length;
-            updateMetrics();
-        };
+        // Capture the readable paragraph once. Decorative child markup, such as the
+        // cursor line, is stripped out by getReadableText before measurement.
+        const sourceText = getReadableText(readerText);
 
-        window.toggleWidth = function () {
-            maxWidth = maxWidth === 500 ? 300 : 500;
-            updateMetrics();
-        };
+        // Applies a zoom stop, waits for the browser to paint it, then asks pretext.js
+        // what the new text layout looks like at the actual rendered width.
+        function updateReaderZoom() {
+            const fontSize = READER_SIZES[sizeIndex];
+            root.style.setProperty('--reader-size', `${fontSize}px`);
 
-        window.addEventListener('resize', resizeCanvas);
+            // Measure after the CSS variable has painted, matching what the reader actually sees.
+            requestAnimationFrame(() => {
+                try {
+                    const maxWidth = Math.round(readerText.getBoundingClientRect().width);
+                    const measurement = measureWithPretext(sourceText, fontSize, maxWidth);
+                    const lineCount = measurement.result.lineCount;
 
-        // Initialize and start animation
-        updateMetrics();
-        animate();
+                    // Update all reader chrome from the same measurement result so the
+                    // zoom percentage, location, progress, and stats stay in sync.
+                    zoomValue.textContent = `${getZoomPercent(fontSize)}%`;
+                    layoutStats.textContent = formatLayoutStats(lineCount, measurement.result.height);
+                    locationLabel.textContent = `Loc ${getLocation(fontSize, lineCount)}`;
+                    root.style.setProperty('--progress', `${getProgressPercent(lineCount)}%`);
+
+                    zoomOut.disabled = sizeIndex === 0;
+                    zoomIn.disabled = sizeIndex === READER_SIZES.length - 1;
+                } catch (error) {
+                    console.error('Unable to measure Kindle reader text with pretext.js.', error);
+                    layoutStats.textContent = 'Measure error';
+                }
+            });
+        }
+
+        // The small A moves to the previous allowed zoom stop.
+        zoomOut.addEventListener('click', () => {
+            sizeIndex = getNextSizeIndex(sizeIndex, -1);
+            updateReaderZoom();
+        });
+
+        // The large A moves to the next allowed zoom stop.
+        zoomIn.addEventListener('click', () => {
+            sizeIndex = getNextSizeIndex(sizeIndex, 1);
+            updateReaderZoom();
+        });
+
+        // Width changes affect wrapping, so a resize needs a fresh pretext.js measure.
+        window.addEventListener('resize', updateReaderZoom);
+
+        // Initial measurement replaces the placeholder footer text after the module loads.
+        updateReaderZoom();
     </script>
 </body>
 </html>
