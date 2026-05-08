@@ -117,6 +117,10 @@ Open `C:\github_\pretext-resume\tests\reader-layout.test.html` in a browser.
   outer word span and reflection/filter animation on an inner text span so the two
   effects do not override each other. Keep this separate from zoom and pagination
   transitions, which should remain clean.
+- The page may include an opt-in live camera reflection by sampling the camera
+  feed and tinting the existing measured resume words in place. Prefer this over
+  rendering a second block of ASCII text so the actual resume copy stays visible
+  and readable at all times.
 - The current reader copy is based on text extracted from the user's uploaded
   resume PDF. Keep the full resume represented in the paginated reader unless the
   user explicitly asks for a shorter demo.
