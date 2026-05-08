@@ -824,7 +824,7 @@
                 const gradientY = bottomLuminance - topLuminance;
                 const edgeStrength = Math.min(1, Math.hypot(gradientX, gradientY) * 2.8);
                 const previousLuminance = previousCameraLuminanceFrame ? previousCameraLuminanceFrame[luminanceIndex] : luminance;
-                const motionStrength = Math.min(1, Math.abs(luminance - previousLuminance) * 7.5);
+                const motionStrength = Math.min(1, Math.abs(luminance - previousLuminance) * 10.5);
                 const edgeDirectionLength = Math.hypot(gradientX, gradientY) || 1;
                 const directionX = gradientX / edgeDirectionLength;
                 const directionY = gradientY / edgeDirectionLength;
@@ -836,10 +836,10 @@
                         : lineElement && lineElement.classList.contains('reader-line-contact')
                             ? 0.42
                             : 1;
-                const displacementStrength = Math.min(1, edgeStrength * (0.12 + motionStrength * 1.55));
-                const maxDisplacement = 4;
+                const displacementStrength = Math.min(1, edgeStrength * (0.18 + motionStrength * 2.15));
+                const maxDisplacement = 6.5;
                 const shiftX = directionX * displacementStrength * maxDisplacement * lineDamping;
-                const shiftY = directionY * displacementStrength * maxDisplacement * 0.72 * lineDamping;
+                const shiftY = directionY * displacementStrength * maxDisplacement * 0.82 * lineDamping;
                 const mixedRed = Math.round(74 + red * 0.08 + contrastLuminance * 46);
                 const mixedGreen = Math.round(71 + green * 0.1 + contrastLuminance * 42);
                 const mixedBlue = Math.round(66 + blue * 0.06 + contrastLuminance * 38);
