@@ -117,10 +117,33 @@ Open `C:\github_\pretext-resume\tests\reader-layout.test.html` in a browser.
   outer word span and reflection/filter animation on an inner text span so the two
   effects do not override each other. Keep this separate from zoom and pagination
   transitions, which should remain clean.
-- The page may include an opt-in live camera reflection by sampling the camera
-  feed and tinting the existing measured resume words in place. Prefer this over
+- The page may include a live camera reflection by sampling the camera feed and
+  tinting the existing measured resume words in place. Prefer this over
   rendering a second block of ASCII text so the actual resume copy stays visible
-  and readable at all times.
+  and readable at all times. If the experience should feel ambient by default,
+  request camera permission during page startup and let the reader continue
+  normally if permission is denied.
+- If camera-driven movement is present, derive it from both local edge contrast
+  and frame-to-frame motion so mostly moving edges disturb nearby words. Keep
+  the displacement subtle, damp headings more than body text, and let the page
+  remain readable before it becomes flashy.
+- After camera permission succeeds, the page may show a short on-screen prompt
+  that invites the user to move their body to interact with the text. Keep the
+  prompt brief, browser-friendly, and temporary so it teaches the interaction
+  without permanently covering the resume.
+- Prefer rendering that prompt as a measured inline note inside the reading area
+  when it adds delight: size it from `pretext.js`, insert it into the text
+  surface, and make nearby lines part around it instead of covering content with
+  a generic floating toast. Favor a shaped, staggered opening with polished
+  motion instead of a blunt vertical push, and style the note as editorial page
+  furniture that matches the e-ink typography rather than a glossy floating card.
+- If the user explicitly asks for something exotic or intentionally disruptive,
+  the prompt may temporarily break the native e-ink styling with bold color,
+  brighter treatment, and a foreign display font. In those cases, keep the effect
+  clearly intentional and sized through the same `pretext.js` measurement flow.
+- When that disruptive prompt appears inside the reader, prefer placing it deeper
+  in the text field and parting nearby lines sideways around it rather than
+  treating it like a top banner that pushes everything straight down.
 - The current reader copy is based on text extracted from the user's uploaded
   resume PDF. Keep the full resume represented in the paginated reader unless the
   user explicitly asks for a shorter demo.

@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pretext Resume - Kindle View</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap');
+
         * {
             margin: 0;
             padding: 0;
@@ -114,34 +116,6 @@
             background: rgba(232, 229, 216, 0.38);
         }
 
-        .status-actions {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .camera-toggle {
-            min-width: 58px;
-            height: 26px;
-            border: 1px solid rgba(85, 83, 76, 0.26);
-            border-radius: 999px;
-            background: rgba(242, 239, 226, 0.58);
-            color: var(--ink);
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 11px;
-            cursor: pointer;
-        }
-
-        .camera-toggle:hover,
-        .camera-toggle:focus-visible {
-            outline: 1px solid rgba(32, 32, 29, 0.34);
-            background: rgba(85, 83, 76, 0.12);
-        }
-
-        .camera-toggle-active {
-            background: rgba(32, 32, 29, 0.16);
-        }
-
         .footer-pagination {
             display: inline-flex;
             align-items: center;
@@ -247,6 +221,7 @@
             color: #2b2a25;
             font-size: var(--reader-size);
             line-height: var(--reader-leading);
+            position: relative;
         }
 
         .reader-line {
@@ -254,6 +229,91 @@
             left: 0;
             white-space: pre;
             z-index: 1;
+            transform: translate3d(0, 0, 0);
+            transition:
+                transform 540ms cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 260ms ease,
+                filter 260ms ease;
+            transition-delay: var(--part-delay, 0ms);
+        }
+
+        .reader-inline-prompt {
+            position: absolute;
+            top: 6px;
+            left: 50%;
+            display: grid;
+            gap: 10px;
+            padding: 16px 24px 18px;
+            border: 1px solid rgba(175, 28, 44, 0.52);
+            color: #ff354d;
+            font-family: "Orbitron", Arial, Helvetica, sans-serif;
+            font-size: 22px;
+            line-height: 1.18;
+            background:
+                radial-gradient(circle at 50% 50%, rgba(255, 112, 124, 0.22), rgba(255, 112, 124, 0) 66%),
+                rgba(255, 243, 245, 0.16);
+            box-shadow:
+                0 0 28px rgba(255, 74, 98, 0.16),
+                inset 0 0 18px rgba(255, 74, 98, 0.06);
+            text-shadow:
+                0 0 10px rgba(255, 79, 109, 0.2),
+                0 0 18px rgba(255, 79, 109, 0.12);
+            filter: brightness(1.18);
+            transform: translate(-50%, -16px) scale(0.94);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 3;
+            transition: opacity 260ms ease, transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .reader-inline-prompt::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: rgba(255, 72, 96, 0.7);
+            transform: translate(-18px, -50%);
+        }
+
+        .reader-inline-prompt::after {
+            content: "";
+            position: absolute;
+            right: 0;
+            top: 50%;
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: rgba(255, 72, 96, 0.42);
+            transform: translate(18px, -50%);
+        }
+
+        .reader-inline-prompt-visible {
+            opacity: 1;
+            transform: translate(-50%, 0) scale(1);
+        }
+
+        .reader-inline-prompt strong {
+            font-family: "Orbitron", Arial, Helvetica, sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: rgba(255, 53, 77, 0.8);
+            justify-self: center;
+        }
+
+        .reader-inline-prompt span {
+            color: #ff354d;
+            text-align: center;
+            text-wrap: balance;
+        }
+
+        .reader-line-parted {
+            opacity: 0.94;
+            filter: blur(0.15px);
         }
 
         .reader-word {
@@ -265,12 +325,13 @@
         .reader-word-text {
             display: inline-block;
             will-change: filter, text-shadow;
-            transition: color 90ms linear, text-shadow 90ms linear, filter 90ms linear;
+            transform: translate3d(var(--camera-shift-x, 0px), var(--camera-shift-y, 0px), 0);
+            transition: color 90ms linear, text-shadow 90ms linear, filter 90ms linear, transform 110ms ease-out;
         }
 
         .reader-word-camera-lit .reader-word-text {
             color: var(--camera-word-color, #20201d);
-            filter: brightness(var(--camera-word-brightness, 1)) contrast(var(--camera-word-contrast, 1));
+            filter: brightness(var(--camera-word-brightness, 1)) contrast(var(--camera-word-contrast, 1)) saturate(0.92);
             text-shadow:
                 0 -1px 0 rgba(255, 255, 255, var(--camera-word-highlight, 0)),
                 0 1px 1px rgba(32, 32, 29, var(--camera-word-shadow, 0)),
@@ -510,9 +571,7 @@
                     <span class="zoom-value" id="zoomValue">100%</span>
                     <button class="zoom-in" id="zoomIn" type="button" aria-label="Increase text size">A</button>
                 </div>
-                <div class="status-actions">
-                    <button class="camera-toggle" id="cameraToggle" type="button" aria-pressed="false">Camera</button>
-                </div>
+                <span aria-hidden="true"></span>
             </header>
 
             <article class="page">
@@ -529,7 +588,7 @@
                 </div>
                 <div class="footer-progress">
                     <div class="progress" aria-hidden="true"><span></span></div>
-                    <span class="wheel-hint">Use mouse wheel to zoom. Camera adds a live text reflection.</span>
+                    <span class="wheel-hint">Use mouse wheel to zoom. Camera reflection starts when permission is granted.</span>
                 </div>
                 <div class="footer-pagination" aria-label="Page controls">
                     <button id="previousPage" type="button" aria-label="Previous page">&lt;</button>
@@ -555,6 +614,7 @@
             DEFAULT_SIZE_INDEX,
             READER_LINE_HEIGHT,
             READER_SIZES,
+            clamp,
             getLocation,
             getNextSizeIndex,
             getPageProgressPercent,
@@ -573,7 +633,6 @@
         const zoomIn = document.getElementById('zoomIn');
         const previousPage = document.getElementById('previousPage');
         const nextPage = document.getElementById('nextPage');
-        const cameraToggle = document.getElementById('cameraToggle');
         const zoomValue = document.getElementById('zoomValue');
         const layoutStats = document.getElementById('layoutStats');
         const pageLabel = document.getElementById('pageLabel');
@@ -586,11 +645,22 @@
         let lastWheelZoomAt = 0;
         let currentColumnCount = 1;
         let currentLinesPerColumn = 1;
+        let currentColumnWidth = 0;
         let cameraStream = null;
         let cameraReflectionActive = false;
         let cameraAnimationFrame = 0;
+        let cameraInstructionTimeout = 0;
+        let cameraInstructionVisible = false;
+        let previousCameraLuminanceFrame = null;
         const LIQUID_WAVE_RADIUS = 300;
         const LIQUID_WAVE_STRENGTH = 14;
+        const CAMERA_PROMPT_TEXT = 'Move your body to interact with the text.';
+        const CAMERA_PROMPT_LABEL = 'Live Motion';
+        const CAMERA_PROMPT_FONT_SIZE = 22;
+        const CAMERA_PROMPT_LINE_HEIGHT = 28;
+        const CAMERA_PROMPT_PADDING_X = 24;
+        const CAMERA_PROMPT_PADDING_Y = 16;
+        const CAMERA_PROMPT_GAP = 26;
         const cameraVideo = document.createElement('video');
         const cameraCanvas = document.createElement('canvas');
         const cameraContext = cameraCanvas.getContext('2d', { willReadFrequently: true });
@@ -677,6 +747,26 @@
             };
         }
 
+        function measureInlinePrompt(maxWidth, visibleHeight) {
+            const promptWidth = clamp(Math.round(maxWidth * 1.08), 320, 460);
+            const prepared = prepareWithSegments(
+                CAMERA_PROMPT_TEXT,
+                `700 ${CAMERA_PROMPT_FONT_SIZE}px "Orbitron", Arial, Helvetica, sans-serif`,
+                { whiteSpace: 'pre-wrap' }
+            );
+            const promptResult = layoutWithLines(
+                prepared,
+                promptWidth - CAMERA_PROMPT_PADDING_X * 2,
+                CAMERA_PROMPT_LINE_HEIGHT
+            );
+
+            return {
+                top: clamp(Math.round(visibleHeight * 0.24), 82, 146),
+                width: promptWidth,
+                height: promptResult.lines.length * CAMERA_PROMPT_LINE_HEIGHT + CAMERA_PROMPT_PADDING_Y * 2 + 18,
+            };
+        }
+
         // The camera reflection uses the existing measured resume words as the display
         // surface. We sample the live image at low resolution and lightly tint words
         // in place so the page stays readable while still carrying motion from the camera.
@@ -699,6 +789,14 @@
             cameraContext.restore();
 
             const { data } = cameraContext.getImageData(0, 0, sampleWidth, sampleHeight);
+            const luminanceFrame = new Float32Array(sampleWidth * sampleHeight);
+
+            for (let pixelIndex = 0; pixelIndex < data.length; pixelIndex += 4) {
+                const red = data[pixelIndex];
+                const green = data[pixelIndex + 1];
+                const blue = data[pixelIndex + 2];
+                luminanceFrame[pixelIndex / 4] = (red * 0.299 + green * 0.587 + blue * 0.114) / 255;
+            }
 
             visibleWords.forEach((wordElement) => {
                 const bounds = wordElement.getBoundingClientRect();
@@ -710,17 +808,46 @@
                 const red = data[pixelIndex];
                 const green = data[pixelIndex + 1];
                 const blue = data[pixelIndex + 2];
-                const luminance = (red * 0.299 + green * 0.587 + blue * 0.114) / 255;
+                const luminanceIndex = pixelY * sampleWidth + pixelX;
+                const luminance = luminanceFrame[luminanceIndex];
                 const inverseLuminance = 1 - luminance;
                 const contrastLuminance = Math.pow(inverseLuminance, 0.72);
-                const mixedRed = Math.round(90 + red * 0.12 + contrastLuminance * 72);
-                const mixedGreen = Math.round(86 + green * 0.14 + contrastLuminance * 68);
-                const mixedBlue = Math.round(79 + blue * 0.1 + contrastLuminance * 64);
-                const brightness = 0.96 + contrastLuminance * 0.32;
+                const leftX = Math.max(0, pixelX - 1);
+                const rightX = Math.min(sampleWidth - 1, pixelX + 1);
+                const topY = Math.max(0, pixelY - 1);
+                const bottomY = Math.min(sampleHeight - 1, pixelY + 1);
+                const leftLuminance = luminanceFrame[pixelY * sampleWidth + leftX];
+                const rightLuminance = luminanceFrame[pixelY * sampleWidth + rightX];
+                const topLuminance = luminanceFrame[topY * sampleWidth + pixelX];
+                const bottomLuminance = luminanceFrame[bottomY * sampleWidth + pixelX];
+                const gradientX = rightLuminance - leftLuminance;
+                const gradientY = bottomLuminance - topLuminance;
+                const edgeStrength = Math.min(1, Math.hypot(gradientX, gradientY) * 2.8);
+                const previousLuminance = previousCameraLuminanceFrame ? previousCameraLuminanceFrame[luminanceIndex] : luminance;
+                const motionStrength = Math.min(1, Math.abs(luminance - previousLuminance) * 7.5);
+                const edgeDirectionLength = Math.hypot(gradientX, gradientY) || 1;
+                const directionX = gradientX / edgeDirectionLength;
+                const directionY = gradientY / edgeDirectionLength;
+                const lineElement = wordElement.closest('.reader-line');
+                const lineDamping = lineElement && lineElement.classList.contains('reader-line-heading')
+                    ? 0.24
+                    : lineElement && lineElement.classList.contains('reader-line-role')
+                        ? 0.52
+                        : lineElement && lineElement.classList.contains('reader-line-contact')
+                            ? 0.42
+                            : 1;
+                const displacementStrength = Math.min(1, edgeStrength * (0.12 + motionStrength * 1.55));
+                const maxDisplacement = 4;
+                const shiftX = directionX * displacementStrength * maxDisplacement * lineDamping;
+                const shiftY = directionY * displacementStrength * maxDisplacement * 0.72 * lineDamping;
+                const mixedRed = Math.round(74 + red * 0.08 + contrastLuminance * 46);
+                const mixedGreen = Math.round(71 + green * 0.1 + contrastLuminance * 42);
+                const mixedBlue = Math.round(66 + blue * 0.06 + contrastLuminance * 38);
+                const brightness = 0.92 + contrastLuminance * 0.16;
                 const contrast = 1.18 + contrastLuminance * 0.42;
-                const highlight = 0.16 + contrastLuminance * 0.32;
-                const shadow = 0.18 + luminance * 0.34;
-                const glow = 0.02 + contrastLuminance * 0.12;
+                const highlight = 0.08 + contrastLuminance * 0.14;
+                const shadow = 0.22 + luminance * 0.36;
+                const glow = 0.01 + contrastLuminance * 0.05;
 
                 wordElement.classList.add('reader-word-camera-lit');
                 wordElement.style.setProperty('--camera-word-color', `rgb(${mixedRed} ${mixedGreen} ${mixedBlue})`);
@@ -729,8 +856,11 @@
                 wordElement.style.setProperty('--camera-word-highlight', highlight.toFixed(3));
                 wordElement.style.setProperty('--camera-word-shadow', shadow.toFixed(3));
                 wordElement.style.setProperty('--camera-word-glow', glow.toFixed(3));
+                wordElement.style.setProperty('--camera-shift-x', `${shiftX.toFixed(2)}px`);
+                wordElement.style.setProperty('--camera-shift-y', `${shiftY.toFixed(2)}px`);
             });
 
+            previousCameraLuminanceFrame = luminanceFrame;
             cameraAnimationFrame = requestAnimationFrame(drawCameraReflectionFrame);
         }
 
@@ -743,10 +873,31 @@
                 wordElement.style.removeProperty('--camera-word-highlight');
                 wordElement.style.removeProperty('--camera-word-shadow');
                 wordElement.style.removeProperty('--camera-word-glow');
+                wordElement.style.removeProperty('--camera-shift-x');
+                wordElement.style.removeProperty('--camera-shift-y');
             });
         }
 
+        function showCameraInstruction() {
+            cameraInstructionVisible = true;
+            rebuildMeasuredPages();
+
+            if (cameraInstructionTimeout) {
+                clearTimeout(cameraInstructionTimeout);
+            }
+
+            cameraInstructionTimeout = window.setTimeout(() => {
+                cameraInstructionVisible = false;
+                rebuildMeasuredPages();
+                cameraInstructionTimeout = 0;
+            }, 4200);
+        }
+
         async function startCameraReflection() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('Camera access is not supported in this browser.');
+            }
+
             cameraStream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     facingMode: 'user',
@@ -762,18 +913,20 @@
             await cameraVideo.play();
 
             cameraReflectionActive = true;
-            cameraToggle.classList.add('camera-toggle-active');
-            cameraToggle.setAttribute('aria-pressed', 'true');
-            cameraToggle.textContent = 'Camera On';
+            previousCameraLuminanceFrame = null;
+            showCameraInstruction();
             drawCameraReflectionFrame();
         }
 
         function stopCameraReflection() {
             cameraReflectionActive = false;
-            cameraToggle.classList.remove('camera-toggle-active');
-            cameraToggle.setAttribute('aria-pressed', 'false');
-            cameraToggle.textContent = 'Camera';
             clearCameraReflectionFromWords();
+
+            if (cameraInstructionTimeout) {
+                clearTimeout(cameraInstructionTimeout);
+                cameraInstructionTimeout = 0;
+            }
+            cameraInstructionVisible = false;
 
             if (cameraAnimationFrame) {
                 cancelAnimationFrame(cameraAnimationFrame);
@@ -786,6 +939,7 @@
             }
 
             cameraVideo.srcObject = null;
+            previousCameraLuminanceFrame = null;
         }
 
         // Creates one absolutely positioned line. Absolute positioning lets the page
@@ -853,6 +1007,81 @@
             }
         }
 
+        function renderInlinePrompt(promptMetrics) {
+            const promptElement = document.createElement('div');
+            const promptLabel = document.createElement('strong');
+            const promptBody = document.createElement('span');
+            promptElement.className = 'reader-inline-prompt';
+            promptElement.style.top = `${promptMetrics.top}px`;
+            promptElement.style.width = `${promptMetrics.width}px`;
+            promptElement.style.minHeight = `${promptMetrics.height}px`;
+            promptLabel.textContent = CAMERA_PROMPT_LABEL;
+            promptBody.textContent = CAMERA_PROMPT_TEXT;
+            promptElement.append(promptLabel, promptBody);
+            readerText.appendChild(promptElement);
+
+            requestAnimationFrame(() => {
+                promptElement.classList.add('reader-inline-prompt-visible');
+            });
+        }
+
+        function applyPromptParting(columnElement, columnIndex, promptMetrics, lineHeight, animate) {
+            const sideDirection = columnIndex === 0 ? -1 : 1;
+            const horizontalPush = clamp(Math.round(promptMetrics.width * 0.18), 34, 62);
+            const lowerShift = clamp(Math.round(promptMetrics.height * 0.3), 18, 34);
+            const promptTop = promptMetrics.top;
+            const promptBottom = promptMetrics.top + promptMetrics.height;
+            const promptCenter = promptTop + promptMetrics.height / 2;
+            const influenceRadius = promptMetrics.height * 1.4;
+            const lowerInfluenceEnd = promptBottom + lineHeight * 3.4;
+
+            columnElement.querySelectorAll('.reader-line').forEach((lineElement, lineIndex) => {
+                const lineTop = lineIndex * lineHeight;
+                const lineCenter = lineTop + lineHeight / 2;
+                lineElement.classList.remove('reader-line-parted');
+                lineElement.style.removeProperty('--part-delay');
+                lineElement.style.transform = 'translate3d(0, 0, 0)';
+
+                const distanceFromPrompt = Math.abs(lineCenter - promptCenter);
+                const overlapStrength = Math.max(0, 1 - distanceFromPrompt / Math.max(1, influenceRadius));
+
+                if (overlapStrength > 0.04) {
+                    const insidePromptBand = lineCenter >= promptTop - lineHeight * 0.8 && lineCenter <= promptBottom + lineHeight * 0.8;
+                    const bandBias = insidePromptBand ? 1 : 0.58;
+                    const verticalDirection = lineCenter < promptCenter ? -1 : 1;
+                    const shiftX = sideDirection * horizontalPush * overlapStrength * bandBias;
+                    const shiftY = verticalDirection * Math.min(16, overlapStrength * 12) + (lineCenter > promptCenter ? overlapStrength * 8 : 0);
+                    const delay = animate ? Math.round((1 - overlapStrength) * 120 + Math.abs(lineCenter - promptCenter) * 0.18 + columnIndex * 46) : 0;
+
+                    lineElement.classList.add('reader-line-parted');
+                    lineElement.style.setProperty('--part-delay', `${delay}ms`);
+
+                    if (animate) {
+                        requestAnimationFrame(() => {
+                            lineElement.style.transform = `translate3d(${shiftX.toFixed(2)}px, ${shiftY.toFixed(2)}px, 0)`;
+                        });
+                    } else {
+                        lineElement.style.transform = `translate3d(${shiftX.toFixed(2)}px, ${shiftY.toFixed(2)}px, 0)`;
+                    }
+                } else if (lineTop < lowerInfluenceEnd && lineTop > promptBottom - lineHeight) {
+                    const settleRatio = Math.min(1, (lineTop - promptBottom) / Math.max(lineHeight * 3.4, 1));
+                    const shiftY = lowerShift * (1 - settleRatio * 0.72);
+                    const shiftX = sideDirection * horizontalPush * 0.18 * (1 - settleRatio);
+                    const delay = animate ? Math.round(170 + Math.min(120, settleRatio * 130) + columnIndex * 46) : 0;
+
+                    lineElement.style.setProperty('--part-delay', `${delay}ms`);
+
+                    if (animate) {
+                        requestAnimationFrame(() => {
+                            lineElement.style.transform = `translate3d(${shiftX.toFixed(2)}px, ${shiftY.toFixed(2)}px, 0)`;
+                        });
+                    } else {
+                        lineElement.style.transform = `translate3d(${shiftX.toFixed(2)}px, ${shiftY.toFixed(2)}px, 0)`;
+                    }
+                }
+            });
+        }
+
         // Redraws the current measured spread without transition effects. Each column
         // is treated as its own page, so a desktop spread shows two real pages at once.
         function renderMeasuredSpread(lineHeight) {
@@ -873,6 +1102,15 @@
             readerText.replaceChildren();
             readerText.appendChild(incomingFragment);
             currentLines = currentPages.slice(pageIndex, pageIndex + currentColumnCount).flat();
+
+            if (cameraInstructionVisible && pageIndex === 0) {
+                const promptMetrics = measureInlinePrompt(currentColumnWidth || 280, readerText.getBoundingClientRect().height);
+                const visibleColumns = Array.from(readerText.querySelectorAll('.reader-column'));
+                visibleColumns.forEach((columnElement, columnIndex) => {
+                    applyPromptParting(columnElement, columnIndex, promptMetrics, lineHeight, true);
+                });
+                renderInlinePrompt(promptMetrics);
+            }
 
             if (cameraReflectionActive) {
                 clearCameraReflectionFromWords();
@@ -915,6 +1153,7 @@
                     const columnGap = Number.parseFloat(computedStyle.columnGap) || 0;
                     currentColumnCount = window.matchMedia('(max-width: 560px)').matches ? 1 : 2;
                     const maxWidth = Math.round((readerBounds.width - columnGap * (currentColumnCount - 1)) / currentColumnCount);
+                    currentColumnWidth = maxWidth;
                     const visibleHeight = readerBounds.height;
                     const measurement = measureWithPretext(resumeSourceText, fontSize, maxWidth);
                     currentLinesPerColumn = Math.max(1, Math.floor(visibleHeight / measurement.lineHeight));
@@ -982,22 +1221,6 @@
             rebuildMeasuredPages();
         });
 
-        // Camera mode is opt-in because the browser will ask for permission. The
-        // reflection stays behind the measured text so the resume remains readable.
-        cameraToggle.addEventListener('click', async () => {
-            try {
-                if (cameraReflectionActive) {
-                    stopCameraReflection();
-                    return;
-                }
-
-                await startCameraReflection();
-            } catch (error) {
-                console.error('Unable to start the live camera reflection.', error);
-                stopCameraReflection();
-            }
-        });
-
         // A click on the reading surface behaves like tapping water: a visual ripple
         // expands from the pointer, and nearby measured word spans wobble with a
         // distance-based delay so the wave appears to travel outward.
@@ -1050,6 +1273,13 @@
 
         // Initial measurement replaces the placeholder footer text after the module loads.
         rebuildMeasuredPages();
+
+        // Ask for the camera immediately so the reflection can feel native to the page.
+        // If permission is denied, the reader still works normally without the effect.
+        startCameraReflection().catch((error) => {
+            console.warn('Unable to start the live camera reflection.', error);
+            stopCameraReflection();
+        });
     </script>
 </body>
 </html>
