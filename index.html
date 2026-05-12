@@ -600,13 +600,14 @@
     </main>
 
     <script src="./reader-layout.js"></script>
-    <script type="module">
+    <script src="./vendor/pretext-compat.js"></script>
+    <script>
         // pretext.js measures text layout without needing hidden DOM measurement nodes.
         // The page uses it after every zoom change to keep the footer honest.
-        import {
+        const {
             layoutWithLines,
             prepareWithSegments,
-        } from 'https://cdn.jsdelivr.net/gh/devdarren7/pretext-js@latest/src/index.js';
+        } = window.PretextCompat;
 
         // The shared helpers are loaded from reader-layout.js so production code and
         // the simple browser test page exercise the same calculations.

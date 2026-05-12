@@ -153,8 +153,12 @@ Open `C:\github_\pretext-resume\tests\reader-layout.test.html` in a browser.
 - Reader zoom calculations are kept in small pure functions in
   `reader-layout.js` and exposed through `window.ReaderLayout` so the no-build
   browser tests can exercise production logic.
-- `pretext.js` is loaded from jsDelivr because this project currently has no
-  package manager, bundler, or local dependency installation.
+- The page vendors a local Pretext compatibility layer at
+  `vendor/pretext-compat.js` instead of importing from a moving `@latest` CDN URL.
+  It attaches to `window.PretextCompat` as a classic script so the demo works on
+  GitHub Pages and from a direct local file open. Keep this local path stable
+  unless the project intentionally adds a package manager or pins an official
+  package version.
 
 ## Maintenance Rules
 
